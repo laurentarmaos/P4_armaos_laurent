@@ -15,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.when;
+
+import java.util.concurrent.TimeUnit;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,16 +68,31 @@ public class ParkingDataBaseIT {
         
         //check if parking spot is unavailable
         assertFalse(ticket.getParkingSpot().isAvailable());
-        
-        //TODO: check that a ticket is actualy saved in DB and Parking table is updated with availability
     }
 
     @Test
     public void testParkingLotExit(){
         testParkingACar();
+    	
+        Ticket ticket = ticketDAO.getTicket("ABCDEF");
+        
+        assertEquals(null, ticket.getOutTime());
+        
+        long time = 1;
+        TimeUnit sec = TimeUnit.SECONDS;
+        try {
+        	sec.sleep(time);
+        } catch (InterruptedException e) {
+        	System.out.println("Interrupted Exception Caught"+ e);
+        }
+        
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+        
         parkingService.processExitingVehicle();
-        //TODO: check that the fare generated and out time are populated correctly in the database
+        
+        Ticket ticketOut = ticketDAO.getTicket("ABCDEF");
+        
+        assertNotNull(ticketOut.getOutTime());
     }
 
 }
