@@ -2,30 +2,99 @@ package com.parkit.parkingsystem;
 
 import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
+import com.parkit.parkingsystem.dao.ParkingSpotDAO;
+import com.parkit.parkingsystem.dao.TicketDAO;
+import com.parkit.parkingsystem.integration.config.DataBaseTestConfig;
+import com.parkit.parkingsystem.integration.service.DataBasePrepareService;
 import com.parkit.parkingsystem.model.ParkingSpot;
 import com.parkit.parkingsystem.model.Ticket;
 import com.parkit.parkingsystem.service.FareCalculatorService;
+import com.parkit.parkingsystem.service.ParkingService;
+import com.parkit.parkingsystem.util.InputReaderUtil;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import java.util.Date;
-
+@ExtendWith(MockitoExtension.class)
 public class FareCalculatorServiceTest {
-
+	
     private static FareCalculatorService fareCalculatorService;
     private Ticket ticket;
+    
+    private static DataBaseTestConfig dataBaseTestConfig = new DataBaseTestConfig();
+    private static ParkingSpotDAO parkingSpotDAO;
+    private static TicketDAO ticketDAO;
+    private static DataBasePrepareService dataBasePrepareService;
+    @Mock
+    private static InputReaderUtil inputReaderUtil;
 
     @BeforeAll
     private static void setUp() {
         fareCalculatorService = new FareCalculatorService();
+        
+        //
+        parkingSpotDAO = new ParkingSpotDAO();
+        parkingSpotDAO.dataBaseConfig = dataBaseTestConfig;
+        ticketDAO = new TicketDAO();
+        ticketDAO.dataBaseConfig = dataBaseTestConfig;
+        dataBasePrepareService = new DataBasePrepareService();
     }
 
     @BeforeEach
-    private void setUpPerTest() {
+    private void setUpPerTest() throws Exception {
         ticket = new Ticket();
+        
+        
+        //when(inputReaderUtil.readSelection()).thenReturn(1);
+        when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
+        dataBasePrepareService.clearDataBaseEntries();
+        
+        //create previous car in parking to validate discount
+        Date inTime = new Date();
+        inTime.setTime(System.currentTimeMillis() - (24 * 60 * 60 * 1000));
+        Date outTime = new Date();
+        outTime.setTime(System.currentTimeMillis() - (12 * 60 * 60 * 1000));
+        ParkingSpot parkingSpot = new ParkingSpot(1,ParkingType.CAR, true);
+        ticket.setParkingSpot(parkingSpot);
+        ticket.setVehicleRegNumber("ABCDEF");
+        ticket.setPrice(0);
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        fareCalculatorService.calculateFare(ticket);
+        ticketDAO.saveTicket(ticket);
+        
+        //create current car (the same) in parking before exiting
+        Ticket ticket2 = new Ticket();
+        Date inTime2 = new Date();
+        inTime2.setTime(System.currentTimeMillis() - (2 * 60 * 60 * 1000));
+        ParkingSpot parkingSpot2 = new ParkingSpot(2,ParkingType.CAR, true);
+        ticket2.setParkingSpot(parkingSpot2);
+        ticket2.setVehicleRegNumber("ABCDEF");
+        ticket2.setPrice(0);
+        ticket2.setInTime(inTime2);
+        ticket2.setOutTime(null);
+        ticketDAO.saveTicket(ticket2);
+        parkingSpot2.setAvailable(false);
+        parkingSpotDAO.updateParking(parkingSpot2);
+    }
+    
+    @Test
+    public void calculateFareDiscountCar() {
+    	ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+    	parkingService.processExitingVehicle();
+    }
+    
+    @Test
+    public void calculateFareDiscountBike() {
+    	
     }
     
     @Test
