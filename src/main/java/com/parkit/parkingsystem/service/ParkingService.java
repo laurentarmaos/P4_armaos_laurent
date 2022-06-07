@@ -100,9 +100,13 @@ public class ParkingService {
     public void processExitingVehicle() {
         try{
             String vehicleRegNumber = getVehichleRegNumber();
-            Ticket ticket = ticketDAO.getTicket(vehicleRegNumber);
+            Ticket ticket = ticketDAO.getExitingTicket(vehicleRegNumber);
             Date outTime = new Date();
             ticket.setOutTime(outTime);
+            if (ticketDAO.countVehicle(vehicleRegNumber) >=2) {
+            	fareCalculatorService.setDiscount(0.95);
+            	System.out.println("Discount of 5% granted to vehicle : " + ticket.getVehicleRegNumber());
+            }
             fareCalculatorService.calculateFare(ticket);
             if(ticketDAO.updateTicket(ticket)) {
                 ParkingSpot parkingSpot = ticket.getParkingSpot();
