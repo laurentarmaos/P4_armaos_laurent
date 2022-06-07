@@ -93,11 +93,6 @@ public class FareCalculatorServiceTest {
     }
     
     @Test
-    public void calculateFareDiscountBike() {
-    	
-    }
-    
-    @Test
     public void calculateFreeParkCar() {
     	Date inTime = new Date();
         inTime.setTime( System.currentTimeMillis() - (30 * 60 * 1000) );
