@@ -49,11 +49,15 @@ public class FareCalculatorServiceTest {
     }
 
     @BeforeEach
-    private void setUpPerTest() throws Exception {
+    private void setUpPerTest(){
         ticket = new Ticket();
         
         
-        //when(inputReaderUtil.readSelection()).thenReturn(1);
+        
+    }
+    
+    @Test
+    public void calculateFareDiscountCar() throws Exception {
         when(inputReaderUtil.readVehicleRegistrationNumber()).thenReturn("ABCDEF");
         dataBasePrepareService.clearDataBaseEntries();
         
@@ -84,10 +88,7 @@ public class FareCalculatorServiceTest {
         ticketDAO.saveTicket(ticket2);
         parkingSpot2.setAvailable(false);
         parkingSpotDAO.updateParking(parkingSpot2);
-    }
-    
-    @Test
-    public void calculateFareDiscountCar() {
+        
     	ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
     	parkingService.processExitingVehicle();
     }
