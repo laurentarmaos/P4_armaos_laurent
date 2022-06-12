@@ -91,6 +91,10 @@ public class FareCalculatorServiceTest {
         
     	ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
     	parkingService.processExitingVehicle();
+    	
+    	Ticket ticketOut = ticketDAO.getTicket("ABCDEF");
+    	    	
+    	assertEquals(Math.round(0.95 * Fare.CAR_RATE_PER_HOUR * 2 * 100.00)/100.00, Math.round(ticketOut.getPrice() *100.00)/100.00);
     }
     
     @Test
